@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 
 // Imports
 import gsap from "gsap";
@@ -8,19 +8,20 @@ import { banner_avatar_data } from "./data";
 import Loader from "@/components/loader/loader";
 import Gallery from "@/components/gallery/gallery";
 
+// Helper function to check for touch support in client environment
+const getIsTouchDevice = () => {
+  return (
+    typeof window !== "undefined" &&
+    (navigator.maxTouchPoints > 0 ||
+      window.matchMedia("(pointer: coarse)").matches)
+  );
+};
+
 const Home = () => {
   // Refs
   const overlayRef = useRef<HTMLDivElement>(null);
   const vignettesRef = useRef<(HTMLDivElement | null)[]>([]);
   const vignetteDimensionsRef = useRef({ width: 0, height: 0 });
-
-  // Memos
-  const { isTouchDevice } = useMemo(() => {
-    const isTouchDevice =
-      navigator.maxTouchPoints > 0 ||
-      window.matchMedia("(pointer: coarse)").matches;
-    return { isTouchDevice };
-  }, []);
 
   const setVignettesInCenter = useCallback(() => {
     const vignettes = vignettesRef.current;
@@ -47,8 +48,8 @@ const Home = () => {
       };
     }
 
-    if (isTouchDevice) setVignettesInCenter();
-  }, [isTouchDevice, setVignettesInCenter]);
+    if (getIsTouchDevice()) setVignettesInCenter();
+  }, [setVignettesInCenter]);
 
   // Handle mouse move for vignette animations
   const onMove = useCallback(
@@ -92,6 +93,8 @@ const Home = () => {
     // Initialize dimensions on mount
     updateVignetteDimensions();
 
+    const isTouchDevice = getIsTouchDevice();
+
     if (isTouchDevice) {
       setVignettesInCenter();
     } else {
@@ -107,13 +110,7 @@ const Home = () => {
       window.removeEventListener("resize", updateVignetteDimensions);
       if (!isTouchDevice) window.removeEventListener("mousemove", onMove);
     };
-  }, [
-    onMove,
-    showContent,
-    isTouchDevice,
-    setVignettesInCenter,
-    updateVignetteDimensions,
-  ]);
+  }, [onMove, showContent, setVignettesInCenter, updateVignetteDimensions]);
 
   return (
     <main className="relative">

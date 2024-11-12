@@ -5,10 +5,12 @@ import React, { useCallback, useEffect, useMemo, useRef } from "react";
 // Imports
 import gsap from "gsap";
 import { banner_avatar_data } from "./data";
+import Loader from "@/components/loader/loader";
 import Gallery from "@/components/gallery/gallery";
 
 const Home = () => {
   // Refs
+  const overlayRef = useRef<HTMLDivElement>(null);
   const vignettesRef = useRef<(HTMLDivElement | null)[]>([]);
   const vignetteDimensionsRef = useRef({ width: 0, height: 0 });
 
@@ -79,6 +81,13 @@ const Home = () => {
     [] // Memoized to prevent re-creations
   );
 
+  const showContent = useCallback(() => {
+    const overlay = overlayRef.current;
+    if (overlay) {
+      gsap.to(overlay, { duration: 1, autoAlpha: 0, delay: 1 });
+    }
+  }, []);
+
   useEffect(() => {
     // Initialize dimensions on mount
     updateVignetteDimensions();
@@ -91,15 +100,29 @@ const Home = () => {
 
     window.addEventListener("resize", updateVignetteDimensions);
 
+    showContent();
+
     return () => {
       // Clean up event listeners on unmount
       window.removeEventListener("resize", updateVignetteDimensions);
       if (!isTouchDevice) window.removeEventListener("mousemove", onMove);
     };
-  }, [onMove, isTouchDevice, setVignettesInCenter, updateVignetteDimensions]);
+  }, [
+    onMove,
+    showContent,
+    isTouchDevice,
+    setVignettesInCenter,
+    updateVignetteDimensions,
+  ]);
 
   return (
-    <main>
+    <main className="relative">
+      <div
+        ref={overlayRef}
+        className="fixed z-10 inset-0 w-screen h-screen bg-white flex items-center justify-center"
+      >
+        <Loader />
+      </div>
       {Object.entries(banner_avatar_data).map(([name, data], idx) => (
         <Gallery
           key={`${name}-${idx}`}
